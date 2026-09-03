@@ -9,6 +9,12 @@
 import type { Context } from "@deepseek-ai/cordis";
 import { fetchUsage, UsageError, type UsageSnapshot } from "./usage.js";
 
+/** Plugin identity used by the loader. */
+export const name = "ollama-cloud-usage";
+
+/** Services the host plugin needs to be active before `apply` runs. */
+export const inject = ["webServer"];
+
 /** Credential reference (env-style) where the client stores the Ollama Cloud key. */
 export const OLLAMA_KEY_REF = "OLLAMA_CLOUD_API_KEY";
 
