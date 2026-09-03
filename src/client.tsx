@@ -78,6 +78,7 @@ function QuotaRing({ wide, api }: QuotaRingProps) {
   const [noKey, setNoKey] = useState(false);
   const [open, setOpen] = useState(false);
   const [keyDraft, setKeyDraft] = useState("");
+  const [keyOpen, setKeyOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -192,70 +193,97 @@ function QuotaRing({ wide, api }: QuotaRingProps) {
             lineHeight: "20px",
           }}
         >
-          <div style={{ fontWeight: 500, marginBottom: 8 }}>Ollama Cloud 配额</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
+            <span style={{ fontWeight: 500 }}>Ollama Cloud 配额</span>
+            {loading && <span style={{ color: "var(--dsw-alias-label-tertiary)", fontSize: 11 }}>刷新中…</span>}
+          </div>
 
-          {loading && <div style={{ color: "var(--dsw-alias-label-tertiary)" }}>加载中…</div>}
+          <BarRow label="5 小时窗口" used={sessionUsed} />
+          <BarRow label="7 天窗口" used={weeklyUsed} />
 
-          {!loading && noKey && (
-            <div style={{ color: "var(--dsw-alias-label-secondary)", marginBottom: 8 }}>
-              尚未配置 API Key。请在下方粘贴你的 Ollama Cloud Key。
-            </div>
-          )}
+          {/* 固定高度的信息行：费用 / 无 key 提示 / 错误，一行省略，避免卡片跳动 */}
+          <div
+            style={{
+              height: 18,
+              overflow: "hidden",
+              whiteSpace: "nowrap",
+              textOverflow: "ellipsis",
+              fontSize: 12,
+              marginTop: 2,
+              color: error
+                ? "var(--dsw-alias-state-error-primary)"
+                : "var(--dsw-alias-label-tertiary)",
+            }}
+          >
+            {error
+              ? error
+              : noKey
+                ? "尚未配置 API Key，展开下方输入。"
+                : usage?.cost !== undefined
+                  ? `近 4 周费用：$${usage.cost}`
+                  : ""}
+          </div>
 
-          {!loading && usage && (
-            <>
-              <Row label="5 小时窗口" used={sessionUsed} />
-              <Row label="7 天窗口" used={weeklyUsed} />
-              {usage.cost !== undefined && (
-                <div style={{ color: "var(--dsw-alias-label-tertiary)", fontSize: 12, marginTop: 4 }}>
-                  近 4 周费用：${usage.cost}
-                </div>
-              )}
-            </>
-          )}
-
-          {!loading && error && (
-            <div style={{ color: "var(--dsw-alias-state-error-primary)", fontSize: 12, marginTop: 4 }}>{error}</div>
-          )}
-
-          <div style={{ borderTop: "1px solid var(--dsw-alias-border-l2)", marginTop: 10, paddingTop: 10 }}>
-            <div style={{ fontSize: 12, color: "var(--dsw-alias-label-tertiary)", marginBottom: 4 }}>API Key</div>
-            <div style={{ display: "flex", gap: 6 }}>
-              <input
-                type="password"
-                value={keyDraft}
-                onChange={(e) => setKeyDraft(e.target.value)}
-                placeholder="ollama-…"
-                style={{
-                  flex: 1,
-                  minWidth: 0,
-                  height: 28,
-                  border: "1px solid var(--dsw-alias-border-l2)",
-                  borderRadius: 6,
-                  padding: "0 8px",
-                  fontSize: 13,
-                  background: "var(--dsw-alias-bg-layer-1)",
-                  color: "var(--dsw-alias-label-primary)",
-                }}
-              />
-              <button
-                type="button"
-                onClick={saveKey}
-                disabled={saving || !keyDraft.trim()}
-                style={{
-                  height: 28,
-                  padding: "0 10px",
-                  border: "none",
-                  borderRadius: 6,
-                  background: "var(--dsw-alias-button-primary-fill)",
-                  color: "var(--dsw-alias-label-primary-foreground)",
-                  cursor: "pointer",
-                  fontSize: 12,
-                }}
-              >
-                {saving ? "保存中…" : "保存"}
-              </button>
-            </div>
+          <div style={{ borderTop: "1px solid var(--dsw-alias-border-l2)", marginTop: 8, paddingTop: 8 }}>
+            <button
+              type="button"
+              onClick={() => setKeyOpen((v) => !v)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                width: "100%",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
+                color: "var(--dsw-alias-label-secondary)",
+                fontSize: 12,
+                lineHeight: "18px",
+                textAlign: "left",
+              }}
+            >
+              <span style={{ display: "inline-block", transition: "transform .12s", transform: keyOpen ? "rotate(90deg)" : "none" }}>▸</span>
+              API Key
+            </button>
+            {keyOpen && (
+              <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+                <input
+                  type="password"
+                  value={keyDraft}
+                  onChange={(e) => setKeyDraft(e.target.value)}
+                  placeholder="ollama-…"
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    height: 28,
+                    border: "1px solid var(--dsw-alias-border-l2)",
+                    borderRadius: 6,
+                    padding: "0 8px",
+                    fontSize: 13,
+                    background: "var(--dsw-alias-bg-layer-1)",
+                    color: "var(--dsw-alias-label-primary)",
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={saveKey}
+                  disabled={saving || !keyDraft.trim()}
+                  style={{
+                    height: 28,
+                    padding: "0 10px",
+                    border: "none",
+                    borderRadius: 6,
+                    background: "var(--dsw-alias-button-primary-fill)",
+                    color: "var(--dsw-alias-label-primary-foreground)",
+                    cursor: "pointer",
+                    fontSize: 12,
+                  }}
+                >
+                  {saving ? "保存中…" : "保存"}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -263,11 +291,42 @@ function QuotaRing({ wide, api }: QuotaRingProps) {
   );
 }
 
-function Row({ label, used }: { label: string; used: number | undefined }) {
+/** 上下文用量同款横向进度条：标签 + 百分比一行，下面一根圆角条。 */
+function BarRow({ label, used }: { label: string; used: number | undefined }) {
+  const frac = used === undefined ? 0 : Math.min(1, Math.max(0, used / 100));
+  const color =
+    used === undefined
+      ? "var(--dsw-alias-border-l3)"
+      : used >= 90
+        ? "var(--dsw-alias-state-error-primary)"
+        : "var(--dsw-alias-state-business-primary)";
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-      <span style={{ color: "var(--dsw-alias-label-secondary)" }}>{label}</span>
-      <span style={{ fontVariantNumeric: "tabular-nums" }}>{pct(used)} 已用</span>
+    <div style={{ marginBottom: 10 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+        <span style={{ color: "var(--dsw-alias-label-secondary)" }}>{label}</span>
+        <span style={{ fontVariantNumeric: "tabular-nums", color: "var(--dsw-alias-label-tertiary)" }}>
+          {pct(used)} 已用
+        </span>
+      </div>
+      <div
+        style={{
+          height: 6,
+          borderRadius: 3,
+          background: "var(--dsw-alias-border-l2)",
+          marginTop: 4,
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            width: `${frac * 100}%`,
+            height: "100%",
+            borderRadius: 3,
+            background: color,
+            transition: "width .2s",
+          }}
+        />
+      </div>
     </div>
   );
 }
