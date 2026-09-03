@@ -1,0 +1,6 @@
+# dsh-ollama-cloud-usage bundle patch: inserts the plugin into the profile
+# loader as a host layer. The client half is declared separately via the
+# package.json `dsh.client` field.
+- insert:
+    - id: ollama-cloud-usage
+      name: 'dsh-ollama-cloud-usage'
