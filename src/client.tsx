@@ -80,6 +80,8 @@ function QuotaRing({ wide, api }: QuotaRingProps) {
   const [keyDraft, setKeyDraft] = useState("");
   const [saving, setSaving] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [popPos, setPopPos] = useState<{ left: number; bottom: number } | null>(null);
 
   const refresh = async () => {
     setLoading(true);
@@ -131,17 +133,27 @@ function QuotaRing({ wide, api }: QuotaRingProps) {
     }
   };
 
+  const toggleOpen = () => {
+    if (!open && btnRef.current) {
+      // Anchor the popup to the button's viewport rect so it renders OUTSIDE
+      // the narrow sidebar (fixed positioning escapes sidebar overflow clipping).
+      const r = btnRef.current.getBoundingClientRect();
+      const left = Math.min(r.right + 8, window.innerWidth - 290);
+      setPopPos({ left: Math.max(8, left), bottom: Math.max(12, window.innerHeight - r.bottom) });
+    }
+    setOpen((v) => !v);
+    void refresh();
+  };
+
   const sessionUsed = usedPercent(usage?.session);
   const weeklyUsed = usedPercent(usage?.weekly);
 
   return (
     <div ref={rootRef} style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
       <button
+        ref={btnRef}
         type="button"
-        onClick={() => {
-          setOpen((v) => !v);
-          void refresh();
-        }}
+        onClick={toggleOpen}
         title={`Ollama Cloud 5h:${pct(sessionUsed)} Wk:${pct(weeklyUsed)}`}
         aria-label="Ollama Cloud quota"
         style={{
@@ -162,14 +174,14 @@ function QuotaRing({ wide, api }: QuotaRingProps) {
         {wide && <span>Ollama</span>}
       </button>
 
-      {open && (
+      {open && popPos && (
         <div
           style={{
-            position: "absolute",
-            bottom: "calc(100% + 8px)",
-            left: 0,
-            zIndex: 30,
-            minWidth: 260,
+            position: "fixed",
+            bottom: popPos.bottom,
+            left: popPos.left,
+            zIndex: 1000,
+            width: 280,
             background: "var(--dsw-specific-menu)",
             border: "1px solid var(--dsw-alias-border-inverted)",
             borderRadius: 12,
