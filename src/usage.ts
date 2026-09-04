@@ -137,11 +137,7 @@ function httpError(status: number): UsageError {
  * @param apiKey - the Ollama Cloud API key (Bearer).
  * @param signal - optional abort signal.
  */
-export async function fetchUsage(apiKey: string, signal?: AbortSignal): Promise<UsageSnapshot> {
-  if (!apiKey) {
-    throw new UsageError("auth", "An Ollama Cloud API key is required.");
-  }
-
+async function attemptOnce(apiKey: string, signal?: AbortSignal): Promise<UsageSnapshot> {
   const controller = new AbortController();
   let timedOut = false;
   const timeout = setTimeout(() => {
@@ -190,6 +186,36 @@ export async function fetchUsage(apiKey: string, signal?: AbortSignal): Promise<
     clearTimeout(timeout);
     signal?.removeEventListener("abort", forwardAbort);
   }
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Fetch and parse the quota snapshot. Transient network failures (transport /
+ * timeout — this endpoint is reached over a flaky international link) are
+ * retried with a short backoff; auth / http / invalid failures fail fast.
+ * @param apiKey - the Ollama Cloud API key (Bearer).
+ * @param signal - optional abort signal.
+ */
+export async function fetchUsage(apiKey: string, signal?: AbortSignal): Promise<UsageSnapshot> {
+  if (!apiKey) {
+    throw new UsageError("auth", "An Ollama Cloud API key is required.");
+  }
+
+  const MAX_ATTEMPTS = 3;
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      return await attemptOnce(apiKey, signal);
+    } catch (error) {
+      lastError = error;
+      const retryable =
+        error instanceof UsageError && (error.code === "transport" || error.code === "timeout");
+      if (!retryable || attempt === MAX_ATTEMPTS || signal?.aborted) throw error;
+      await sleep(600 * attempt);
+    }
+  }
+  throw lastError;
 }
 
 /** Quota used as a percentage (0–100), when the window is reported. */
