@@ -39,13 +39,13 @@ function Ring({ value, size = 16 }: { value: number | undefined; size?: number }
   const frac = value === undefined ? 0 : Math.min(1, Math.max(0, value / 100));
   const color =
     value === undefined
-      ? "var(--dsw-alias-label-caption)"
+      ? "var(--dsw-alias-label-caption, #7a7a7a)"
       : value >= 90
-        ? "var(--dsw-alias-state-error-primary)"
-        : "var(--dsw-alias-state-business-primary)";
+        ? "var(--dsw-alias-state-error-primary, #ff5c5c)"
+        : "var(--dsw-alias-state-business-primary, #4d6bfe)";
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: "block" }}>
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--dsw-alias-border-l2)" strokeWidth={stroke} />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--dsw-alias-border-l2, rgba(255,255,255,0.16))" strokeWidth={stroke} />
       <circle
         cx={size / 2}
         cy={size / 2}
@@ -166,7 +166,7 @@ function QuotaRing({ wide, api }: QuotaRingProps) {
           cursor: "pointer",
           padding: "4px 6px",
           borderRadius: 8,
-          color: "var(--dsw-alias-label-secondary)",
+          color: "var(--dsw-alias-label-secondary, #b3b3b3)",
           fontSize: 12,
           lineHeight: "18px",
         }}
@@ -183,12 +183,16 @@ function QuotaRing({ wide, api }: QuotaRingProps) {
             left: popPos.left,
             zIndex: 1000,
             width: 280,
-            background: "var(--dsw-specific-menu)",
-            border: "1px solid var(--dsw-alias-border-inverted)",
-            borderRadius: 12,
-            boxShadow: "var(--dsw-shadow-lv3)",
+            // 雾面玻璃：半透明底 + backdrop 模糊；颜色带兜底，主题缺变量也不透明
+            background:
+              "color-mix(in srgb, var(--dsw-alias-bg-layer-1, var(--dsw-alias-bg-base, #202024)) 74%, transparent)",
+            backdropFilter: "blur(20px) saturate(1.8)",
+            WebkitBackdropFilter: "blur(20px) saturate(1.8)",
+            border: "1px solid var(--dsw-alias-border-l2, rgba(255,255,255,0.14))",
+            borderRadius: 14,
+            boxShadow: "0 12px 36px rgba(0,0,0,0.30)",
             padding: 12,
-            color: "var(--dsw-alias-label-primary)",
+            color: "var(--dsw-alias-label-primary, #f2f2f2)",
             fontSize: 13,
             lineHeight: "20px",
           }}
@@ -211,8 +215,8 @@ function QuotaRing({ wide, api }: QuotaRingProps) {
               fontSize: 12,
               marginTop: 2,
               color: error
-                ? "var(--dsw-alias-state-error-primary)"
-                : "var(--dsw-alias-label-tertiary)",
+                ? "var(--dsw-alias-state-error-primary, #ff5c5c)"
+                : "var(--dsw-alias-label-tertiary, #8a8a8a)",
             }}
           >
             {error
@@ -224,7 +228,7 @@ function QuotaRing({ wide, api }: QuotaRingProps) {
                   : ""}
           </div>
 
-          <div style={{ borderTop: "1px solid var(--dsw-alias-border-l2)", marginTop: 8, paddingTop: 8 }}>
+          <div style={{ borderTop: "1px solid var(--dsw-alias-border-l2, rgba(255,255,255,0.14))", marginTop: 8, paddingTop: 8 }}>
             <button
               type="button"
               onClick={() => setKeyOpen((v) => !v)}
@@ -237,7 +241,7 @@ function QuotaRing({ wide, api }: QuotaRingProps) {
                 border: "none",
                 cursor: "pointer",
                 padding: 0,
-                color: "var(--dsw-alias-label-secondary)",
+                color: "var(--dsw-alias-label-secondary, #b3b3b3)",
                 fontSize: 12,
                 lineHeight: "18px",
                 textAlign: "left",
@@ -257,12 +261,12 @@ function QuotaRing({ wide, api }: QuotaRingProps) {
                     flex: 1,
                     minWidth: 0,
                     height: 28,
-                    border: "1px solid var(--dsw-alias-border-l2)",
+                    border: "1px solid var(--dsw-alias-border-l2, rgba(255,255,255,0.14))",
                     borderRadius: 6,
                     padding: "0 8px",
                     fontSize: 13,
-                    background: "var(--dsw-alias-bg-layer-1)",
-                    color: "var(--dsw-alias-label-primary)",
+                    background: "var(--dsw-alias-bg-layer-1, rgba(255,255,255,0.06))",
+                    color: "var(--dsw-alias-label-primary, #f2f2f2)",
                   }}
                 />
                 <button
@@ -274,8 +278,8 @@ function QuotaRing({ wide, api }: QuotaRingProps) {
                     padding: "0 10px",
                     border: "none",
                     borderRadius: 6,
-                    background: "var(--dsw-alias-button-primary-fill)",
-                    color: "var(--dsw-alias-label-primary-foreground)",
+                    background: "var(--dsw-alias-button-primary-fill, #4d6bfe)",
+                    color: "var(--dsw-alias-label-primary-foreground, #ffffff)",
                     cursor: "pointer",
                     fontSize: 12,
                   }}
@@ -296,15 +300,15 @@ function BarRow({ label, used }: { label: string; used: number | undefined }) {
   const frac = used === undefined ? 0 : Math.min(1, Math.max(0, used / 100));
   const color =
     used === undefined
-      ? "var(--dsw-alias-border-l3)"
+      ? "var(--dsw-alias-border-l3, rgba(255,255,255,0.22))"
       : used >= 90
-        ? "var(--dsw-alias-state-error-primary)"
-        : "var(--dsw-alias-state-business-primary)";
+        ? "var(--dsw-alias-state-error-primary, #ff5c5c)"
+        : "var(--dsw-alias-state-business-primary, #4d6bfe)";
   return (
     <div style={{ marginBottom: 10 }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-        <span style={{ color: "var(--dsw-alias-label-secondary)" }}>{label}</span>
-        <span style={{ fontVariantNumeric: "tabular-nums", color: "var(--dsw-alias-label-tertiary)" }}>
+        <span style={{ color: "var(--dsw-alias-label-secondary, #b3b3b3)" }}>{label}</span>
+        <span style={{ fontVariantNumeric: "tabular-nums", color: "var(--dsw-alias-label-tertiary, #8a8a8a)" }}>
           {pct(used)} 已用
         </span>
       </div>
@@ -312,7 +316,7 @@ function BarRow({ label, used }: { label: string; used: number | undefined }) {
         style={{
           height: 6,
           borderRadius: 3,
-          background: "var(--dsw-alias-border-l2)",
+          background: "var(--dsw-alias-border-l2, rgba(255,255,255,0.16))",
           marginTop: 4,
           overflow: "hidden",
         }}
