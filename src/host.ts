@@ -7,6 +7,9 @@
  * the client via `api.credentials.set`), fetches the quota, and returns JSON.
  */
 import type { Context } from "@deepseek-ai/cordis";
+import { writeFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import { fetchUsage, UsageError, type UsageSnapshot } from "./usage.js";
 
 /** Plugin identity used by the loader. */
@@ -50,6 +53,18 @@ function send(res: import("node:http").ServerResponse, status: number, body: unk
  * `webServer` service. Dispose the returned function to unregister the route.
  */
 export function apply(ctx: Context) {
+  // Load marker: proves from outside whether the host actually loaded this
+  // plugin (and when) — a browser-side check cannot establish that.
+  try {
+    const home = process.env.DSH_HOME?.trim() || join(homedir(), ".dsh");
+    writeFileSync(
+      join(home, "ollama-quota-plugin.loaded.json"),
+      JSON.stringify({ loadedAt: new Date().toISOString(), pid: process.pid, route: USAGE_ROUTE }, null, 2),
+    );
+  } catch {
+    /* diagnostic only — never block activation */
+  }
+
   const webServer = ctx.get("webServer");
   if (webServer === undefined) {
     ctx.logger.warn("dsh-ollama-cloud-usage: webServer service unavailable; quota route not mounted.");
